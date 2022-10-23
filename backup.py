@@ -14,7 +14,7 @@ DATE_FORMAT = "%Y%m%d"
 # Logger constants
 LOGGER = "backuplog"
 LOG_LEVEL = "DEBUG"
-LOG_PATH = "/tmp/backup.log"
+LOG_PATH = "/home/pi/Applications/logs/backup.log"
 LOG_WHEN = "d"
 LOG_INTERVAL = 1
 LOG_BACKUP_COUNT = 2
