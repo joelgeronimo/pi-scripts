@@ -1,6 +1,7 @@
 [Unit]
 Description=Mount Docker images on boot after NAS drives have mounted
 After=multi-user.target nas-mount.service
+Requires=nas-mount.service
 
 [Service]
 Type=oneshot
@@ -11,6 +12,8 @@ ExecStart=/bin/sleep 30
 ExecStart=/usr/bin/docker start sonarr
 ExecStart=/bin/sleep 30
 ExecStart=/usr/bin/docker start radarr
+ExecStart=/bin/sleep 30
+ExecStart=/usr/bin/docker start ombi
 
 [Install]
 WantedBy=multi-user.target
