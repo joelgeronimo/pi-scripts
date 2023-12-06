@@ -7,6 +7,7 @@ from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 
 SOURCE = "/home/pi/Applications/"
+EMBY_SOURCE = "/var/lib/emby"
 DESTINATION = "/home/pi/Backups/RPi/"
 RETENTION = 4
 DATE_FORMAT = "%Y%m%d"
@@ -57,6 +58,7 @@ def backup():
     if create_new_backup:
         # Create a new backup folder
         new_backup = os.path.join(DESTINATION, current_date.strftime(DATE_FORMAT))
+        inside_new_backup = os.path.join(new_backup, "")
         if not os.path.exists(new_backup):
             logger.info("Creating new backup folder: {}".format(new_backup))
             os.makedirs(new_backup)
@@ -64,6 +66,9 @@ def backup():
         # Perform the RSYNC and place it in the new backup folder
         logger.info("Performing rsync...")
         p = subprocess.Popen(["rsync", "-rz", SOURCE, new_backup], stdout=subprocess.PIPE)
+        p.communicate()
+        # Perform the RSYNC for Emby folder, placing it inside the new backup folder
+        p = subprocess.Popen(["rsync", "-rz", EMBY_SOURCE, inside_new_backup], stdout=subprocess.PIPE)
         p.communicate()
         logger.info("rsync done.")
     else:
