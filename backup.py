@@ -8,6 +8,7 @@ from datetime import datetime
 
 SOURCE = "/home/pi/Applications/"
 EMBY_SOURCE = "/var/lib/emby"
+PIHOLE_TELEPORTER_SCRIPT = os.path.join(SOURCE, "pi-scripts/pihole-teleporter.sh")
 DESTINATION = "/home/pi/Backups/RPi/"
 RETENTION = 4
 DATE_FORMAT = "%Y%m%d"
@@ -62,6 +63,10 @@ def backup():
         if not os.path.exists(new_backup):
             logger.info("Creating new backup folder: {}".format(new_backup))
             os.makedirs(new_backup)
+            
+        # Perform pi-hole config backup using teleporter by running the shell script
+        p = subprocess.Popen(["sh", PIHOLE_TELEPORTER_SCRIPT], stdout=subprocess.PIPE)
+        p.communicate()
 
         # Perform the RSYNC and place it in the new backup folder
         logger.info("Performing rsync...")
