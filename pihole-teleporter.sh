@@ -8,3 +8,4 @@ pihole -a -t
 
 # Move the generated file to the Applications folder
 mv pi-hole-raspberrypi-teleporter_* /home/pi/Applications/teleporter/
+
