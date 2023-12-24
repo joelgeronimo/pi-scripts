@@ -92,7 +92,7 @@ if __name__ == "__main__":
     logger.addHandler(handler)
 
     # Set the backup frequency
-    schedule.every().day.at("03:00").do(backup)
+    schedule.every().day.at("04:00").do(backup)
 
     logger.info("Backup script is now running!")
     while True:
