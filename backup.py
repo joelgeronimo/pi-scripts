@@ -8,10 +8,11 @@ from datetime import datetime
 
 SOURCE = "/home/pi/Applications/"
 EMBY_SOURCE = "/var/lib/emby"
-PIHOLE_TELEPORTER_SCRIPT = os.path.join(SOURCE, "pi-scripts/pihole-teleporter.sh")
+PIHOLE_TELEPORTER_DESTINATION = "/home/pi/Applications/teleporter/"
 DESTINATION = "/home/pi/Backups/RPi/"
 RETENTION = 3
 DATE_FORMAT = "%Y%m%d"
+RUN_EVERY_DAY_AT = "04:00"
 
 # Logger constants
 LOGGER = "backuplog"
@@ -53,8 +54,7 @@ def backup():
             backup_to_delete = backup_dates_sorted.pop(0).strftime(DATE_FORMAT)
             # Delete
             logger.info("Deleting backup folder due to retention: {}".format(backup_to_delete))
-            p = subprocess.Popen(["rm", "-rf", os.path.join(DESTINATION, backup_to_delete)], stdout=subprocess.PIPE)
-            p.communicate()
+            p = subprocess.run(["rm", "-rf", os.path.join(DESTINATION, backup_to_delete)], stdout=subprocess.PIPE)
 
     if create_new_backup:
         # Create a new backup folder
@@ -64,17 +64,27 @@ def backup():
             logger.info("Creating new backup folder: {}".format(new_backup))
             os.makedirs(new_backup)
 
-        # Perform pi-hole config backup using teleporter by running the shell script
-        p = subprocess.Popen(["sh", PIHOLE_TELEPORTER_SCRIPT], stdout=subprocess.PIPE)
-        p.communicate()
+        # Perform pi-hole config backup using teleporter
+        p = subprocess.run("ls {}".format(PIHOLE_TELEPORTER_DESTINATION), shell=True, stdout=subprocess.PIPE)
+        old_teleporter_config = p.stdout.decode("utf-8").strip("\n").split("\n")[0]
+        if len(old_teleporter_config) > 0:
+            # Delete the old config
+            logger.info("Deleting old teleporter config: {}".format(old_teleporter_config))
+            p = subprocess.run("rm -f {}{}".format(PIHOLE_TELEPORTER_DESTINATION, old_teleporter_config), shell=True, stdout=subprocess.PIPE)
+        # Run the teleporter
+        p = subprocess.run(["pihole", "-a", "-t"], stdout=subprocess.PIPE)
+        p = subprocess.run("ls pi-hole-raspberrypi-teleporter_*", shell=True, stdout=subprocess.PIPE)
+        new_teleporter_config = p.stdout.decode("utf-8").strip("\n").split("\n")[0]
+        logger.info("New teleporter config: {}".format(new_teleporter_config))
+        p = subprocess.run(["mv", new_teleporter_config, PIHOLE_TELEPORTER_DESTINATION], stdout=subprocess.PIPE)
 
         # Perform the RSYNC and place it in the new backup folder
         logger.info("Performing rsync...")
-        p = subprocess.Popen(["rsync", "-rz", SOURCE, new_backup], stdout=subprocess.PIPE)
-        p.communicate()
+        p = subprocess.run(["rsync", "-rz", SOURCE, new_backup], stdout=subprocess.PIPE)
+
         # Perform the RSYNC for Emby folder, placing it inside the new backup folder
-        p = subprocess.Popen(["rsync", "-rz", EMBY_SOURCE, inside_new_backup], stdout=subprocess.PIPE)
-        p.communicate()
+        p = subprocess.run(["rsync", "-rz", EMBY_SOURCE, inside_new_backup], stdout=subprocess.PIPE)
+
         logger.info("rsync done.")
     else:
         logger.info("Backup folder already exists, rsync skipped.")
@@ -92,7 +102,7 @@ if __name__ == "__main__":
     logger.addHandler(handler)
 
     # Set the backup frequency
-    schedule.every().day.at("04:00").do(backup)
+    schedule.every().day.at(RUN_EVERY_DAY_AT).do(backup)
 
     logger.info("Backup script is now running!")
     while True:
