@@ -1,0 +1,13 @@
+[Unit]
+Description=Run telegram_bot.py after network is up
+After=network-online.target
+
+[Service]
+ExecStart=/home/pi/Applications/Telegram-Bot/venv/bin/python /home/pi/Applications/Telegram-Bot/telegram_bot.py
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

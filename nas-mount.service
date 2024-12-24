@@ -1,13 +1,13 @@
 [Unit]
-Description=Mount NAS Drives on boot
-After=multi-user.target
+Description=Service that waits for NAS before running script
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-Type=oneshot
-ExecStartPre=/bin/bash -c '(while ! ping 192.168.31.32 -c 1 1>/dev/null; do echo "Waiting for NAS to boot..."; sleep 2; done); sleep 2'
-ExecStart=/bin/mount -t nfs 192.168.31.32:/volume1/Plex /home/pi/Videos/Plex -o nolock,async,noatime,nodiratime,noexec,rw,nosuid
-ExecStart=/bin/mount -t nfs 192.168.31.32:/volume1/Downloads /home/pi/Downloads/NAS -o nolock,async,noatime,nodiratime,noexec,rw,nosuid
-ExecStart=/bin/mount -t nfs 192.168.31.32:/volume1/Backups /home/pi/Backups -o nolock,async,noatime,nodiratime,noexec,rw,nosuid
+Type=simple
+ExecStart=/home/pi/Applications/pi-scripts/ping_nas.sh
+Restart=on-failure
+RestartSec=30
 
 [Install]
 WantedBy=multi-user.target

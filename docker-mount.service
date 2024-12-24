@@ -12,8 +12,6 @@ ExecStart=/bin/sleep 30
 ExecStart=/usr/bin/docker start sonarr
 ExecStart=/bin/sleep 30
 ExecStart=/usr/bin/docker start radarr
-ExecStart=/bin/sleep 30
-ExecStart=/usr/bin/docker start ombi
 
 [Install]
 WantedBy=multi-user.target

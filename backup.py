@@ -2,6 +2,7 @@ import os
 import time
 import schedule
 import subprocess
+import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
@@ -12,7 +13,7 @@ PIHOLE_TELEPORTER_DESTINATION = "/home/pi/Applications/teleporter/"
 DESTINATION = "/home/pi/Backups/RPi/"
 RETENTION = 3
 DATE_FORMAT = "%Y%m%d"
-RUN_EVERY_DAY_AT = "04:00"
+RUN_EVERY_DAY_AT = "19:00"
 
 # Logger constants
 LOGGER = "backuplog"
@@ -64,20 +65,6 @@ def backup():
             logger.info("Creating new backup folder: {}".format(new_backup))
             os.makedirs(new_backup)
 
-        # Perform pi-hole config backup using teleporter
-        p = subprocess.run("ls {}".format(PIHOLE_TELEPORTER_DESTINATION), shell=True, stdout=subprocess.PIPE)
-        old_teleporter_config = p.stdout.decode("utf-8").strip("\n").split("\n")[0]
-        if len(old_teleporter_config) > 0:
-            # Delete the old config
-            logger.info("Deleting old teleporter config: {}".format(old_teleporter_config))
-            p = subprocess.run("rm -f {}{}".format(PIHOLE_TELEPORTER_DESTINATION, old_teleporter_config), shell=True, stdout=subprocess.PIPE)
-        # Run the teleporter
-        p = subprocess.run(["pihole", "-a", "-t"], stdout=subprocess.PIPE)
-        p = subprocess.run("ls pi-hole-raspberrypi-teleporter_*", shell=True, stdout=subprocess.PIPE)
-        new_teleporter_config = p.stdout.decode("utf-8").strip("\n").split("\n")[0]
-        logger.info("New teleporter config: {}".format(new_teleporter_config))
-        p = subprocess.run(["mv", new_teleporter_config, PIHOLE_TELEPORTER_DESTINATION], stdout=subprocess.PIPE)
-
         # Perform the RSYNC and place it in the new backup folder
         logger.info("Performing rsync...")
         p = subprocess.run(["rsync", "-rz", SOURCE, new_backup], stdout=subprocess.PIPE)
@@ -106,5 +93,9 @@ if __name__ == "__main__":
 
     logger.info("Backup script is now running!")
     while True:
-        schedule.run_pending()
-        time.sleep(1)
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except Exception as e:
+            logger.info(e)
+            sys.exit(e)
